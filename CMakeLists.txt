@@ -23,7 +23,9 @@ file(GLOB_RECURSE FILTER_SOURCES CONFIGURE_DEPENDS
 file(GLOB_RECURSE CONVOLUTION_RUNTIME_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/convolution/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/parallel_convolution/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/pipeline/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/sequentially_convolution/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/image_helpers/*.c"
 )
 
@@ -134,4 +136,5 @@ if(BUILD_TESTING)
     pkg_check_modules(CMOCKA REQUIRED IMPORTED_TARGET cmocka)
 
     add_subdirectory(test/sequential_tests)
+    add_subdirectory(test/thread_pool_tests)
 endif()

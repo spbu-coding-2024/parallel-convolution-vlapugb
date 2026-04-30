@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include <app/execution_config.h>
 #include <filters/filter.h>
 
 #define CLI_MAX_FILTERS 2U
@@ -24,6 +25,7 @@ typedef struct cli_filter_spec {
 typedef struct cli_request {
   const char *input_path;
   const char *output_path;
+  execution_mode_t mode;
   cli_filter_spec_t filters[CLI_MAX_FILTERS];
   size_t filter_count;
 } cli_request_t;

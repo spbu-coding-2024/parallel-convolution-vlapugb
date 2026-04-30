@@ -1,8 +1,8 @@
-# Image Conversation — Sequential Convolution
+# Image Conversation — Parallel Convolution
 
-Ветка содержит первую задачу: последовательную свёртку одного изображения.
+Ветка создана поверх `feat/sequential_convolution` и содержит вторую задачу: параллельную свёртку одного изображения.
 
-В составе ветки оставлены фильтры, загрузка/сохранение изображения, CLI, тестовые изображения и тесты последовательной реализации. Параллельная свёртка, thread pool и pipeline здесь намеренно отсутствуют, чтобы diff относительно `main` показывал только первую задачу.
+Инкремент относительно последовательной ветки — общий рантайм свёртки и OpenMP-реализации разбиения по строкам, столбцам, пикселям и прямоугольным блокам. Pipeline для массива изображений в этой ветке отсутствует.
 
 ## Сборка
 
@@ -14,13 +14,7 @@ cmake --build build --target app -j
 ## Пример запуска
 
 ```bash
-./build/app -i input/sea.png -o output/sea.png -f gauss -h 5 -w 5 -s
+./build/app -i input/sea.png -o output/sea.png -f gauss -h 5 -w 5 -p rows
 ```
 
-## Тесты
-
-```bash
-cmake -S . -B build-tests -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
-cmake --build build-tests -j
-ctest --test-dir build-tests --output-on-failure
-```
+Доступные режимы: `rows`, `cols`, `pixels`, `grid`.

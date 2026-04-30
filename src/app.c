@@ -1,8 +1,10 @@
 #include "cli_args.h"
 
 #include <filters/filter.h>
+#include <parallel_convolution/parallel_convolution.h>
 #include <sequentially_convolution/sequentially_convolution.h>
 
+#include <time.h>
 #include <stdio.h>
 
 #include <opencv2/highgui/highgui_c.h>
@@ -10,8 +12,43 @@
 
 #define MAX_ERROR_MESSAGE_LENGTH 32
 
+static double elapsed_ms(const struct timespec *start,
+                         const struct timespec *end) {
+  const double seconds = (double)(end->tv_sec - start->tv_sec) * 1000.0;
+  const double nanoseconds =
+    (double)(end->tv_nsec - start->tv_nsec) / 1000000.0;
+
+  return seconds + nanoseconds;
+}
+
+typedef int (*convolution_runner_t)(const filter_t *filter,
+                                    image_view_t *image_view);
+
+static convolution_runner_t select_convolution_runner(execution_mode_t mode) {
+  switch (mode) {
+  case EXECUTION_MODE_SEQ:
+    return sequential_convolution;
+  case EXECUTION_MODE_ROWS:
+    return parallel_convolution_rows;
+  case EXECUTION_MODE_PIXELS:
+    return parallel_convolution_pixels;
+  case EXECUTION_MODE_COLS:
+    return parallel_convolution_cols;
+  case EXECUTION_MODE_GRID:
+    return parallel_convolution_rectangle;
+  default:
+    return NULL;
+  }
+}
+
 static int apply_filters(const cli_request_t *request,
                          image_view_t *image_view) {
+  convolution_runner_t run_convolution =
+    select_convolution_runner(request->mode);
+  if (run_convolution == NULL) {
+    return -1;
+  }
+
   for (size_t i = 0; i < request->filter_count; ++i) {
     filter_t filter;
     filter_request_t filter_request = {
@@ -27,7 +64,7 @@ static int apply_filters(const cli_request_t *request,
     }
 
     if (!filter_is_convolution(&filter) ||
-        sequential_convolution(&filter, image_view) != 0) {
+        run_convolution(&filter, image_view) != 0) {
       return -1;
     }
   }
@@ -63,12 +100,19 @@ int main(int argc, char **argv) {
     .stride = (size_t)image->widthStep,
     .channels = (size_t)image->nChannels,
   };
+  struct timespec start_time;
+  struct timespec end_time;
+
+  timespec_get(&start_time, TIME_UTC);
 
   if (apply_filters(&request, &image_view) != 0) {
     cvReleaseImage(&image);
     fputs("failed to apply filters\n", stderr);
     return -1;
   }
+
+  timespec_get(&end_time, TIME_UTC);
+  printf("processing time: %.3f ms\n", elapsed_ms(&start_time, &end_time));
 
   if (!cvSaveImage(request.output_path, image, NULL)) {
     cvReleaseImage(&image);

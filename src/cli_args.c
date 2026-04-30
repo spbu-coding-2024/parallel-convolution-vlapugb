@@ -76,8 +76,26 @@ static bool cli_parse_type(const char *text, filter_direction_t *direction) {
   return true;
 }
 
+static bool cli_parse_execution_mode(const char *text, execution_mode_t *mode) {
+  if (strcmp(text, "cols") == 0) {
+    *mode = EXECUTION_MODE_COLS;
+  } else if (strcmp(text, "rows") == 0 || strcmp(text, "raws") == 0) {
+    *mode = EXECUTION_MODE_ROWS;
+  } else if (strcmp(text, "pixels") == 0) {
+    *mode = EXECUTION_MODE_PIXELS;
+  } else if (strcmp(text, "grid") == 0 || strcmp(text, "rectangle") == 0 ||
+             strcmp(text, "random") == 0) {
+    *mode = EXECUTION_MODE_GRID;
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
 static void cli_init_request(cli_request_t *request) {
   memset(request, 0, sizeof(*request));
+  request->mode = EXECUTION_MODE_SEQ;
   for (size_t i = 0; i < CLI_MAX_FILTERS; ++i) {
     request->filters[i].direction = FILTER_DIRECTION_NONE;
     request->filters[i].border_mode = FILTER_BORDER_WRAP;
@@ -174,7 +192,17 @@ cli_parse_status_t cli_parse_args(int argc,
     request->filter_count = CLI_MAX_FILTERS;
   }
 
-  if (strcmp(argv[index], "-s") != 0 || index + 1 != argc) {
+  if (index >= argc) {
+    return cli_invalid(error_message, error_message_size);
+  }
+
+  if (strcmp(argv[index], "-s") == 0 && index + 1 == argc) {
+    request->mode = EXECUTION_MODE_SEQ;
+  } else if (strcmp(argv[index], "-p") == 0 && index + 2 == argc) {
+    if (!cli_parse_execution_mode(argv[index + 1], &request->mode)) {
+      return cli_invalid(error_message, error_message_size);
+    }
+  } else {
     return cli_invalid(error_message, error_message_size);
   }
 
@@ -184,13 +212,19 @@ cli_parse_status_t cli_parse_args(int argc,
 void cli_print_help(FILE *stream, const char *program_name) {
   const char *name = program_name != NULL ? program_name : "main";
 
-  fprintf(stream,
-          "Usage:\n"
-          "  %s -i <input> -o <output> -f <filter> -h <height> -w <width> "
-          "[-t <type>] -s\n"
-          "  %s -i <input> -o <output> -f <filter1> -h <height1> -w <width1> "
-          "[-t <type1>] "
-          "-f <filter2> -h <height2> -w <width2> [-t <type2>] -s\n",
-          name,
-          name);
+  fprintf(
+    stream,
+    "Usage:\n"
+    "  %s -i <input> -o <output> -f <filter> -h <height> -w <width> "
+    "[-t <type>] -s\n"
+    "  %s -i <input> -o <output> -f <filter> -h <height> -w <width> "
+    "[-t <type>] -p "
+    "<cols|rows|raws|pixels|grid|rectangle|random>\n"
+    "  %s -i <input> -o <output> -f <filter1> -h <height1> -w <width1> "
+    "[-t <type1>] "
+    "-f <filter2> -h <height2> -w <width2> [-t <type2>] "
+    "(-s | -p <cols|rows|raws|pixels|grid|rectangle|random>)\n",
+    name,
+    name,
+    name);
 }

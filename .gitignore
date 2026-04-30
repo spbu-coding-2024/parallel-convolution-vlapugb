@@ -1,4 +1,7 @@
 /.cache
 /build
+__pycache__/
+*.pyc
 /benchmarks/processed_outputs
 /benchmarks/pipeline_outputs
+/benchmarks/results

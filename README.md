@@ -17,6 +17,12 @@ cmake --build build --target app -j
 ./build/app -i input/sea.png -o output/sea.png -f gauss -h 5 -w 5 -s
 ```
 
+## Посмотреть параметры запуска
+
+```bash
+./build/app --help
+```
+
 ## Тесты
 
 ```bash

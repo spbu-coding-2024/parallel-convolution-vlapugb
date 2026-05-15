@@ -10,9 +10,9 @@
 
 #include <runtime/thread_pool.h>
 
-#define PIPELINE_WORKER_COUNT 3U
+#define PIPELINE_WORKER_COUNT 4U
 #define PIPELINE_MAX_ACTIVE_READERS 1U
-#define PIPELINE_MAX_ACTIVE_COMPUTERS 1U
+#define PIPELINE_MAX_ACTIVE_COMPUTERS 2U
 #define PIPELINE_MAX_ACTIVE_WRITERS 1U
 
 typedef enum image_job_status {

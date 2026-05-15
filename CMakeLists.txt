@@ -22,6 +22,7 @@ file(GLOB_RECURSE FILTER_SOURCES CONFIGURE_DEPENDS
 
 file(GLOB_RECURSE CONVOLUTION_RUNTIME_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/convolution/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/gpu_convolution/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/parallel_convolution/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/pipeline/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/sequentially_convolution/*.c"
@@ -79,7 +80,19 @@ FetchContent_Declare(
     GIT_SHALLOW TRUE
 )
 
-FetchContent_MakeAvailable(opencv)
+FetchContent_Declare(
+    opencl_headers
+    GIT_REPOSITORY https://github.com/KhronosGroup/OpenCL-Headers.git
+    GIT_TAG v2023.04.17
+)
+
+FetchContent_Declare(
+    opencl_icd_loader
+    GIT_REPOSITORY https://github.com/KhronosGroup/OpenCL-ICD-Loader.git
+    GIT_TAG v2023.04.17
+)
+
+FetchContent_MakeAvailable(opencv opencl_headers opencl_icd_loader)
 
 add_library(opencv_legacy_c_api INTERFACE)
 target_include_directories(opencv_legacy_c_api
@@ -113,11 +126,18 @@ target_include_directories(convolution_runtime
         ${CMAKE_CURRENT_SOURCE_DIR}/src
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/internal
+        ${opencl_headers_SOURCE_DIR}
+)
+target_compile_definitions(convolution_runtime
+    PRIVATE
+        CL_TARGET_OPENCL_VERSION=300
+        GPU_CONVOLUTION_KERNEL_PATH="${CMAKE_CURRENT_SOURCE_DIR}/src/gpu_convolution/gpu_convolution.cl"
 )
 target_link_libraries(convolution_runtime
     PUBLIC
         filters_core
         opencv_legacy_c_api
+        OpenCL
         Threads::Threads
         OpenMP::OpenMP_C
 )

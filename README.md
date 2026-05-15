@@ -425,3 +425,7 @@ gauss 5x5 -> sharpen 3x3
 
 </details>
 
+- `feat/sequential_convolution` — последовательная свёртка.
+- `feat/parallel_convolution` — параллельная свёртка поверх последовательной реализации.
+- `feat/image_pipepline` — pipeline обработки изображений поверх параллельной реализации.
+- `feat/gpgu_pipepline` — pipeline обработки изображений с параллельной реализацией, gpu и hybrid (gpu + cpu)
